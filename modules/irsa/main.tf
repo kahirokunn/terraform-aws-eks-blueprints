@@ -5,9 +5,9 @@ resource "kubernetes_namespace_v1" "irsa" {
   }
 
   timeouts {
-    create = 300
-    update = 300
-    delete = 300
+    create = "10m"
+    update = "10m"
+    delete = "10m"
   }
 }
 
@@ -22,9 +22,9 @@ resource "kubernetes_service_account_v1" "irsa" {
   automount_service_account_token = true
 
   timeouts {
-    create = 300
-    update = 300
-    delete = 300
+    create = "10m"
+    update = "10m"
+    delete = "10m"
   }
 }
 
