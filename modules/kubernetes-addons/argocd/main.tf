@@ -4,6 +4,7 @@ module "helm_addon" {
   irsa_config          = null
   set_sensitive_values = local.set_sensitive
   addon_context        = var.addon_context
+  kubernetes_timeouts  = var.kubernetes_timeouts
 
   depends_on = [kubernetes_namespace_v1.this]
 }
