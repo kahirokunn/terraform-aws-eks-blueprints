@@ -1,11 +1,12 @@
 #-----------------AWS Managed EKS Add-ons----------------------
 
 module "aws_vpc_cni" {
-  count         = var.enable_amazon_eks_vpc_cni ? 1 : 0
-  source        = "./aws-vpc-cni"
-  addon_config  = var.amazon_eks_vpc_cni_config
-  addon_context = local.addon_context
-  enable_ipv6   = var.enable_ipv6
+  count               = var.enable_amazon_eks_vpc_cni ? 1 : 0
+  source              = "./aws-vpc-cni"
+  addon_config        = var.amazon_eks_vpc_cni_config
+  addon_context       = local.addon_context
+  enable_ipv6         = var.enable_ipv6
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_coredns" {
@@ -36,6 +37,7 @@ module "aws_coredns" {
       image_registry = local.amazon_container_image_registry_uris[data.aws_region.current.name]
     }
   )
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_kube_proxy" {
@@ -46,10 +48,11 @@ module "aws_kube_proxy" {
 }
 
 module "aws_ebs_csi_driver" {
-  count         = var.enable_amazon_eks_aws_ebs_csi_driver ? 1 : 0
-  source        = "./aws-ebs-csi-driver"
-  addon_config  = var.amazon_eks_aws_ebs_csi_driver_config
-  addon_context = local.addon_context
+  count               = var.enable_amazon_eks_aws_ebs_csi_driver ? 1 : 0
+  source              = "./aws-ebs-csi-driver"
+  addon_config        = var.amazon_eks_aws_ebs_csi_driver_config
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 #-----------------Kubernetes Add-ons----------------------
@@ -61,6 +64,7 @@ module "agones" {
   eks_worker_security_group_id = var.eks_worker_security_group_id
   manage_via_gitops            = var.argocd_manage_add_ons
   addon_context                = local.addon_context
+  kubernetes_timeouts          = var.kubernetes_timeouts
 }
 
 module "argocd" {
@@ -71,22 +75,25 @@ module "argocd" {
   admin_password_secret_name = var.argocd_admin_password_secret_name
   addon_config               = { for k, v in local.argocd_addon_config : k => v if v != null }
   addon_context              = local.addon_context
+  kubernetes_timeouts        = var.kubernetes_timeouts
 }
 
 module "argo_rollouts" {
-  count             = var.enable_argo_rollouts ? 1 : 0
-  source            = "./argo-rollouts"
-  helm_config       = var.argo_rollouts_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_argo_rollouts ? 1 : 0
+  source              = "./argo-rollouts"
+  helm_config         = var.argo_rollouts_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_efs_csi_driver" {
-  count             = var.enable_aws_efs_csi_driver ? 1 : 0
-  source            = "./aws-efs-csi-driver"
-  helm_config       = var.aws_efs_csi_driver_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_aws_efs_csi_driver ? 1 : 0
+  source              = "./aws-efs-csi-driver"
+  helm_config         = var.aws_efs_csi_driver_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_for_fluent_bit" {
@@ -99,23 +106,26 @@ module "aws_for_fluent_bit" {
   cw_log_group_kms_key_arn = var.aws_for_fluentbit_cw_log_group_kms_key_arn
   manage_via_gitops        = var.argocd_manage_add_ons
   addon_context            = local.addon_context
+  kubernetes_timeouts      = var.kubernetes_timeouts
 }
 
 module "aws_cloudwatch_metrics" {
-  count             = var.enable_aws_cloudwatch_metrics ? 1 : 0
-  source            = "./aws-cloudwatch-metrics"
-  helm_config       = var.aws_cloudwatch_metrics_helm_config
-  irsa_policies     = var.aws_cloudwatch_metrics_irsa_policies
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_aws_cloudwatch_metrics ? 1 : 0
+  source              = "./aws-cloudwatch-metrics"
+  helm_config         = var.aws_cloudwatch_metrics_helm_config
+  irsa_policies       = var.aws_cloudwatch_metrics_irsa_policies
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_load_balancer_controller" {
-  count             = var.enable_aws_load_balancer_controller ? 1 : 0
-  source            = "./aws-load-balancer-controller"
-  helm_config       = var.aws_load_balancer_controller_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = merge(local.addon_context, { default_repository = local.amazon_container_image_registry_uris[data.aws_region.current.name] })
+  count               = var.enable_aws_load_balancer_controller ? 1 : 0
+  source              = "./aws-load-balancer-controller"
+  helm_config         = var.aws_load_balancer_controller_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = merge(local.addon_context, { default_repository = local.amazon_container_image_registry_uris[data.aws_region.current.name] })
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "aws_node_termination_handler" {
@@ -125,6 +135,7 @@ module "aws_node_termination_handler" {
   irsa_policies           = var.aws_node_termination_handler_irsa_policies
   autoscaling_group_names = var.auto_scaling_group_names
   addon_context           = local.addon_context
+  kubernetes_timeouts     = var.kubernetes_timeouts
 }
 
 module "cert_manager" {
@@ -137,6 +148,7 @@ module "cert_manager" {
   domain_names                = var.cert_manager_domain_names
   install_letsencrypt_issuers = var.cert_manager_install_letsencrypt_issuers
   letsencrypt_email           = var.cert_manager_letsencrypt_email
+  kubernetes_timeouts         = var.kubernetes_timeouts
 }
 
 module "cluster_autoscaler" {
@@ -148,36 +160,40 @@ module "cluster_autoscaler" {
   helm_config         = var.cluster_autoscaler_helm_config
   manage_via_gitops   = var.argocd_manage_add_ons
   addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "coredns_autoscaler" {
-  count             = var.enable_amazon_eks_coredns && var.enable_coredns_autoscaler && length(var.coredns_autoscaler_helm_config) > 0 ? 1 : 0
-  source            = "./cluster-proportional-autoscaler"
-  helm_config       = var.coredns_autoscaler_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_amazon_eks_coredns && var.enable_coredns_autoscaler && length(var.coredns_autoscaler_helm_config) > 0 ? 1 : 0
+  source              = "./cluster-proportional-autoscaler"
+  helm_config         = var.coredns_autoscaler_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "crossplane" {
-  count            = var.enable_crossplane ? 1 : 0
-  source           = "./crossplane"
-  helm_config      = var.crossplane_helm_config
-  aws_provider     = var.crossplane_aws_provider
-  jet_aws_provider = var.crossplane_jet_aws_provider
-  account_id       = data.aws_caller_identity.current.account_id
-  aws_partition    = data.aws_partition.current.id
-  addon_context    = local.addon_context
+  count               = var.enable_crossplane ? 1 : 0
+  source              = "./crossplane"
+  helm_config         = var.crossplane_helm_config
+  aws_provider        = var.crossplane_aws_provider
+  jet_aws_provider    = var.crossplane_jet_aws_provider
+  account_id          = data.aws_caller_identity.current.account_id
+  aws_partition       = data.aws_partition.current.id
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "external_dns" {
-  count             = var.enable_external_dns ? 1 : 0
-  source            = "./external-dns"
-  helm_config       = var.external_dns_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  irsa_policies     = var.external_dns_irsa_policies
-  addon_context     = local.addon_context
-  domain_name       = var.eks_cluster_domain
-  private_zone      = var.external_dns_private_zone
+  count               = var.enable_external_dns ? 1 : 0
+  source              = "./external-dns"
+  helm_config         = var.external_dns_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  irsa_policies       = var.external_dns_irsa_policies
+  addon_context       = local.addon_context
+  domain_name         = var.eks_cluster_domain
+  private_zone        = var.external_dns_private_zone
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "fargate_fluentbit" {
@@ -188,11 +204,12 @@ module "fargate_fluentbit" {
 }
 
 module "ingress_nginx" {
-  count             = var.enable_ingress_nginx ? 1 : 0
-  source            = "./ingress-nginx"
-  helm_config       = var.ingress_nginx_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_ingress_nginx ? 1 : 0
+  source              = "./ingress-nginx"
+  helm_config         = var.ingress_nginx_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "karpenter" {
@@ -203,31 +220,35 @@ module "karpenter" {
   node_iam_instance_profile = var.karpenter_node_iam_instance_profile
   manage_via_gitops         = var.argocd_manage_add_ons
   addon_context             = local.addon_context
+  kubernetes_timeouts       = var.kubernetes_timeouts
 }
 
 module "keda" {
-  count             = var.enable_keda ? 1 : 0
-  source            = "./keda"
-  helm_config       = var.keda_helm_config
-  irsa_policies     = var.keda_irsa_policies
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_keda ? 1 : 0
+  source              = "./keda"
+  helm_config         = var.keda_helm_config
+  irsa_policies       = var.keda_irsa_policies
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "kubernetes_dashboard" {
-  count             = var.enable_kubernetes_dashboard ? 1 : 0
-  source            = "./kubernetes-dashboard"
-  helm_config       = var.kubernetes_dashboard_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_kubernetes_dashboard ? 1 : 0
+  source              = "./kubernetes-dashboard"
+  helm_config         = var.kubernetes_dashboard_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "metrics_server" {
-  count             = var.enable_metrics_server ? 1 : 0
-  source            = "./metrics-server"
-  helm_config       = var.metrics_server_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_metrics_server ? 1 : 0
+  source              = "./metrics-server"
+  helm_config         = var.metrics_server_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "ondat" {
@@ -256,14 +277,16 @@ module "prometheus" {
   amazon_prometheus_workspace_endpoint = var.amazon_prometheus_workspace_endpoint
   manage_via_gitops                    = var.argocd_manage_add_ons
   addon_context                        = local.addon_context
+  kubernetes_timeouts                  = var.kubernetes_timeouts
 }
 
 module "spark_k8s_operator" {
-  count             = var.enable_spark_k8s_operator ? 1 : 0
-  source            = "./spark-k8s-operator"
-  helm_config       = var.spark_k8s_operator_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_spark_k8s_operator ? 1 : 0
+  source              = "./spark-k8s-operator"
+  helm_config         = var.spark_k8s_operator_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "tetrate_istio" {
@@ -285,11 +308,12 @@ module "tetrate_istio" {
 }
 
 module "traefik" {
-  count             = var.enable_traefik ? 1 : 0
-  source            = "./traefik"
-  helm_config       = var.traefik_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_traefik ? 1 : 0
+  source              = "./traefik"
+  helm_config         = var.traefik_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "vault" {
@@ -305,35 +329,39 @@ module "vault" {
 }
 
 module "vpa" {
-  count             = var.enable_vpa ? 1 : 0
-  source            = "./vpa"
-  helm_config       = var.vpa_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_vpa ? 1 : 0
+  source              = "./vpa"
+  helm_config         = var.vpa_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "yunikorn" {
-  count             = var.enable_yunikorn ? 1 : 0
-  source            = "./yunikorn"
-  helm_config       = var.yunikorn_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_yunikorn ? 1 : 0
+  source              = "./yunikorn"
+  helm_config         = var.yunikorn_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "csi_secrets_store_provider_aws" {
-  count             = var.enable_secrets_store_csi_driver_provider_aws ? 1 : 0
-  source            = "./csi-secrets-store-provider-aws"
-  helm_config       = var.csi_secrets_store_provider_aws_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_secrets_store_csi_driver_provider_aws ? 1 : 0
+  source              = "./csi-secrets-store-provider-aws"
+  helm_config         = var.csi_secrets_store_provider_aws_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "secrets_store_csi_driver" {
-  count             = var.enable_secrets_store_csi_driver ? 1 : 0
-  source            = "./secrets-store-csi-driver"
-  helm_config       = var.secrets_store_csi_driver_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
+  count               = var.enable_secrets_store_csi_driver ? 1 : 0
+  source              = "./secrets-store-csi-driver"
+  helm_config         = var.secrets_store_csi_driver_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 module "aws_privateca_issuer" {
   count                   = var.enable_aws_privateca_issuer ? 1 : 0
@@ -343,16 +371,18 @@ module "aws_privateca_issuer" {
   addon_context           = local.addon_context
   aws_privateca_acmca_arn = var.aws_privateca_acmca_arn
   irsa_policies           = var.aws_privateca_issuer_irsa_policies
+  kubernetes_timeouts     = var.kubernetes_timeouts
 }
 
 module "velero" {
-  count             = var.enable_velero ? 1 : 0
-  source            = "./velero"
-  helm_config       = var.velero_helm_config
-  manage_via_gitops = var.argocd_manage_add_ons
-  addon_context     = local.addon_context
-  irsa_policies     = var.velero_irsa_policies
-  backup_s3_bucket  = var.velero_backup_s3_bucket
+  count               = var.enable_velero ? 1 : 0
+  source              = "./velero"
+  helm_config         = var.velero_helm_config
+  manage_via_gitops   = var.argocd_manage_add_ons
+  addon_context       = local.addon_context
+  irsa_policies       = var.velero_irsa_policies
+  backup_s3_bucket    = var.velero_backup_s3_bucket
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "opentelemetry_operator" {
@@ -373,7 +403,8 @@ module "opentelemetry_operator" {
   enable_opentelemetry_operator = var.enable_opentelemetry_operator
   helm_config                   = var.opentelemetry_operator_helm_config
 
-  addon_context = local.addon_context
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "adot_collector_java" {
@@ -389,6 +420,7 @@ module "adot_collector_java" {
   depends_on = [
     module.opentelemetry_operator
   ]
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "adot_collector_haproxy" {
@@ -404,6 +436,7 @@ module "adot_collector_haproxy" {
   depends_on = [
     module.opentelemetry_operator
   ]
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "adot_collector_memcached" {
@@ -419,6 +452,7 @@ module "adot_collector_memcached" {
   depends_on = [
     module.opentelemetry_operator
   ]
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "adot_collector_nginx" {
@@ -434,11 +468,13 @@ module "adot_collector_nginx" {
   depends_on = [
     module.opentelemetry_operator
   ]
+  kubernetes_timeouts = var.kubernetes_timeouts
 }
 
 module "external_secrets" {
-  count         = var.enable_external_secrets ? 1 : 0
-  source        = "./external-secrets"
-  helm_config   = var.external_secrets_helm_config
-  addon_context = local.addon_context
+  count               = var.enable_external_secrets ? 1 : 0
+  source              = "./external-secrets"
+  helm_config         = var.external_secrets_helm_config
+  addon_context       = local.addon_context
+  kubernetes_timeouts = var.kubernetes_timeouts
 }

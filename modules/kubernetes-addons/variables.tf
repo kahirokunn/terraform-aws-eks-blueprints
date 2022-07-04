@@ -902,3 +902,9 @@ variable "external_secrets_helm_config" {
   default     = {}
   description = "External Secrets operator Helm Chart config"
 }
+
+variable "kubernetes_timeouts" {
+  description = "Define maximum timeout for creating, updating, and deleting kubernetes resources"
+  type        = map(string)
+  default     = {}
+}
