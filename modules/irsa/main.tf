@@ -3,6 +3,10 @@ resource "kubernetes_namespace_v1" "irsa" {
   metadata {
     name = var.kubernetes_namespace
   }
+
+  timeouts {
+    create = local.timeouts.create
+  }
 }
 
 resource "kubernetes_service_account_v1" "irsa" {
@@ -14,6 +18,10 @@ resource "kubernetes_service_account_v1" "irsa" {
   }
 
   automount_service_account_token = true
+
+  timeouts {
+    create = local.timeouts.create
+  }
 }
 
 resource "aws_iam_role" "irsa" {
@@ -49,6 +57,12 @@ resource "aws_iam_role" "irsa" {
     },
     var.addon_context.tags
   )
+
+  timeouts {
+    create = local.timeouts.create
+    update = local.timeouts.update
+    delete = local.timeouts.delete
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "irsa" {
@@ -56,4 +70,10 @@ resource "aws_iam_role_policy_attachment" "irsa" {
 
   policy_arn = var.irsa_iam_policies[count.index]
   role       = aws_iam_role.irsa[0].name
+
+  timeouts {
+    create = local.timeouts.create
+    update = local.timeouts.update
+    delete = local.timeouts.delete
+  }
 }
