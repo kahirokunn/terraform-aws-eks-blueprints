@@ -5,15 +5,21 @@ resource "kubernetes_namespace_v1" "irsa" {
   }
 }
 
-resource "kubernetes_service_account_v1" "irsa" {
+resource "kubectl_manifest" "irsa_service_account" {
   count = var.create_kubernetes_service_account ? 1 : 0
-  metadata {
-    name        = var.kubernetes_service_account
-    namespace   = var.kubernetes_namespace
-    annotations = var.irsa_iam_policies != null ? { "eks.amazonaws.com/role-arn" : aws_iam_role.irsa[0].arn } : null
-  }
-
-  automount_service_account_token = true
+  yaml_body = yamlencode({
+    apiVersion = "v1"
+    kind       = "ServiceAccount"
+    metadata = {
+      name      = var.kubernetes_service_account
+      namespace = var.kubernetes_namespace
+      labels = {
+        "app.kubernetes.io/managed-by" : "Terraform"
+      }
+      "annotations" = var.irsa_iam_policies != null ? { "eks.amazonaws.com/role-arn" : aws_iam_role.irsa[0].arn } : null
+    }
+    automountServiceAccountToken = true
+  })
 }
 
 resource "aws_iam_role" "irsa" {
