@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.10"
     }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.14.0"
+    }
     helm = {
       source  = "hashicorp/helm"
       version = ">= 2.4.1"
@@ -25,10 +29,6 @@ terraform {
     http = {
       source  = "terraform-aws-modules/http"
       version = "2.4.1"
-    }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = ">= 1.14"
     }
   }
 }
