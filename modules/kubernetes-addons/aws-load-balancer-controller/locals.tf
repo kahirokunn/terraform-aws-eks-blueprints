@@ -35,10 +35,10 @@ locals {
     }
   ]
 
-  argocd_gitops_config = {
+  argocd_gitops_config = merge({
     enable             = true
     serviceAccountName = local.service_account_name
-  }
+  }, local.helm_config["values"])
 
   irsa_config = {
     kubernetes_namespace              = local.helm_config["namespace"]
