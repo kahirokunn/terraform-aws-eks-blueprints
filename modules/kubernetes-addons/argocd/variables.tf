@@ -12,7 +12,7 @@ variable "applications" {
 
 variable "addon_config" {
   description = "Configuration for managing add-ons via ArgoCD"
-  type        = any
+  type        = map(any)
   default     = {}
 }
 
