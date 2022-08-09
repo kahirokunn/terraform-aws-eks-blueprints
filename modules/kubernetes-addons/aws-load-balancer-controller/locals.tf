@@ -19,9 +19,10 @@ locals {
   )
 
   default_helm_values = [templatefile("${path.module}/values.yaml", {
-    aws_region     = var.addon_context.aws_region_name,
-    eks_cluster_id = var.addon_context.eks_cluster_id,
-    repository     = "${var.addon_context.default_repository}/amazon/aws-load-balancer-controller"
+    aws_region           = var.addon_context.aws_region_name,
+    eks_cluster_id       = var.addon_context.eks_cluster_id,
+    repository           = "${var.addon_context.default_repository}/amazon/aws-load-balancer-controller",
+    service_account_name = local.service_account_name,
   })]
 
   set_values = [
@@ -35,10 +36,9 @@ locals {
     }
   ]
 
-  argocd_gitops_config = {
-    enable             = true
-    serviceAccountName = local.service_account_name
-  }
+  argocd_gitops_config = merge({
+    enable = true
+  }, merge([for value in local.helm_config["values"] : yamldecode(value)]...))
 
   irsa_config = {
     kubernetes_namespace              = local.helm_config["namespace"]
