@@ -12,8 +12,12 @@ variable "applications" {
 
 variable "addon_config" {
   description = "Configuration for managing add-ons via ArgoCD"
-  type        = any
-  default     = {}
+  type = object({
+    enable = bool
+  })
+  default = {
+    enable = false
+  }
 }
 
 variable "addon_context" {
