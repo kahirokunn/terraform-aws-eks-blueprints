@@ -31,12 +31,14 @@ locals {
     }
   ]
 
-  helm_config = module.helm_config.merged
+  helm_config = merge(local.default_helm_config, var.helm_config, {
+    values: concat(local.default_helm_config["values"], var.helm_config["values"])
+  })
 
   decoded_yaml_values = [for value in local.helm_config["values"] : yamldecode(value)]
   argocd_gitops_config = merge({
     enable = true
-  }, [for value in module.helm_config.merged["values"] : yamldecode(value)]...)
+  }, [for value in local.helm_config["values"] : yamldecode(value)]...)
 
   irsa_config = {
     kubernetes_namespace              = local.helm_config["namespace"]
@@ -45,15 +47,6 @@ locals {
     create_kubernetes_service_account = true
     irsa_iam_policies                 = [aws_iam_policy.aws_load_balancer_controller.arn]
   }
-}
-
-module "helm_config" {
-  source  = "Invicton-Labs/deepmerge/null"
-  version = "0.1.5"
-  maps = [
-    local.default_helm_config,
-    var.helm_config
-  ]
 }
 
 module "deepmerged_yaml_values" {
