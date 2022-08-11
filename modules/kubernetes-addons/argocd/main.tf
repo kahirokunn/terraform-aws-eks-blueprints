@@ -121,14 +121,10 @@ module "helm_values" {
 
   source  = "Invicton-Labs/deepmerge/null"
   version = "0.1.5"
-  maps = each.value.add_on_application ? [
+  maps = [
     { repo_url = each.value.repo_url },
     each.value.values,
     local.global_application_values,
     local.addon_config
-    ] : [
-    { repo_url = each.value.repo_url },
-    each.value.values,
-    local.global_application_values
   ]
 }
