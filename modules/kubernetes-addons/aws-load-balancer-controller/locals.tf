@@ -32,7 +32,7 @@ locals {
   ]
 
   helm_config = merge(local.default_helm_config, var.helm_config, {
-    values: concat(local.default_helm_config["values"], var.helm_config["values"])
+    values : concat(local.default_helm_config["values"], var.helm_config["values"])
   })
 
   decoded_yaml_values = [for value in local.helm_config["values"] : yamldecode(value)]

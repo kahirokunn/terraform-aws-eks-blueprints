@@ -59,8 +59,17 @@ resource "helm_release" "argocd_application" {
   }
 
   set {
-    name  = "source.helm.values"
-    value = yamlencode(module.helm_values[each.key].merged)
+    name = "source.helm.values"
+    value = each.value.add_on_application ? yamlencode(merge(
+      { repo_url = each.value.repo_url },
+      each.value.values,
+      local.global_application_values,
+      local.addon_config
+      )) : yamlencode(merge(
+      { repo_url = each.value.repo_url },
+      each.value.values,
+      local.global_application_values
+    ))
   }
 
   # Destination Config.
@@ -114,17 +123,4 @@ resource "kubernetes_secret" "argocd_gitops" {
   }
 
   depends_on = [module.helm_addon]
-}
-
-module "helm_values" {
-  for_each = { for k, v in var.applications : k => merge(local.default_argocd_application, v) if merge(local.default_argocd_application, v).type == "helm" }
-
-  source  = "Invicton-Labs/deepmerge/null"
-  version = "0.1.5"
-  maps = [
-    { repo_url = each.value.repo_url },
-    each.value.values,
-    local.global_application_values,
-    local.addon_config
-  ]
 }
