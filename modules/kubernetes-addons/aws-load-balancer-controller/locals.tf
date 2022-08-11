@@ -13,11 +13,6 @@ locals {
     description = "aws-load-balancer-controller Helm Chart for ingress resources"
   }
 
-  helm_config = merge(
-    local.default_helm_config,
-    var.helm_config
-  )
-
   default_helm_values = [templatefile("${path.module}/values.yaml", {
     aws_region           = var.addon_context.aws_region_name,
     eks_cluster_id       = var.addon_context.eks_cluster_id,
@@ -36,9 +31,12 @@ locals {
     }
   ]
 
+  helm_config = module.helm_config.merged
+
+  decoded_yaml_values = [for value in local.helm_config["values"] : yamldecode(value)]
   argocd_gitops_config = merge({
     enable = true
-  }, merge([for value in local.helm_config["values"] : yamldecode(value)]...))
+  }, module.deepmerged_yaml_values.merged)
 
   irsa_config = {
     kubernetes_namespace              = local.helm_config["namespace"]
@@ -47,4 +45,19 @@ locals {
     create_kubernetes_service_account = true
     irsa_iam_policies                 = [aws_iam_policy.aws_load_balancer_controller.arn]
   }
+}
+
+module "helm_config" {
+  source  = "Invicton-Labs/deepmerge/null"
+  version = "0.1.5"
+  maps = [
+    local.default_helm_config,
+    var.helm_config
+  ]
+}
+
+module "deepmerged_yaml_values" {
+  source  = "Invicton-Labs/deepmerge/null"
+  version = "0.1.5"
+  maps    = local.decoded_yaml_values
 }
