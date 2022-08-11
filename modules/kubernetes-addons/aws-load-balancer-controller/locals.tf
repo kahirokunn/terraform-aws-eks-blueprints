@@ -36,7 +36,7 @@ locals {
   decoded_yaml_values = [for value in local.helm_config["values"] : yamldecode(value)]
   argocd_gitops_config = merge({
     enable = true
-  }, module.deepmerged_yaml_values.merged)
+  }, local.default_helm_values[0])
 
   irsa_config = {
     kubernetes_namespace              = local.helm_config["namespace"]
