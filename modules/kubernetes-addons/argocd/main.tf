@@ -58,29 +58,18 @@ resource "helm_release" "argocd_application" {
     value = each.key
   }
 
-  dynamic "set" {
-    for_each = toset(each.value.add_on_application ? ["any"] : [])
-    content {
-      name = "source.helm.values"
-      value = yamlencode(merge(
-        { repo_url = each.value.repo_url },
-        each.value.values,
-        local.global_application_values,
-        local.addon_config
-      ))
-    }
-  }
-
-  dynamic "set" {
-    for_each = toset(each.value.add_on_application == false ? ["any"] : [])
-    content {
-      name = "source.helm.values"
-      value = yamlencode(merge(
-        { repo_url = each.value.repo_url },
-        each.value.values,
-        local.global_application_values
-      ))
-    }
+  set {
+    name = "source.helm.values"
+    value = each.value.add_on_application ? yamlencode(merge(
+      { repo_url = each.value.repo_url },
+      each.value.values,
+      local.global_application_values,
+      local.addon_config
+      )) : yamlencode(merge(
+      { repo_url = each.value.repo_url },
+      each.value.values,
+      local.global_application_values
+    ))
   }
 
   # Destination Config.
