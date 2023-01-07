@@ -40,6 +40,7 @@ locals {
   argocd_gitops_config = {
     enable             = true
     serviceAccountName = local.service_account
+    queueURL           = aws_sqs_queue.aws_node_termination_handler_queue
   }
 
   irsa_config = {
